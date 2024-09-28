@@ -1,5 +1,4 @@
 import throttle from 'lodash-es/throttle';
-import iconSize from './consts/icon-size';
 
 interface Config {
   events?: {
@@ -7,18 +6,19 @@ interface Config {
   };
 }
 
+function createControlBar(): HTMLElement {
+  const controlBar = document.createElement('div');
+
+  controlBar.className = 'controlBar';
+
+  return controlBar;
+}
+
 function createDragHandle(): HTMLElement {
   const handle = document.createElement('div');
+  handle.className = 'dragHandle';
 
   handle.draggable = true;
-
-  handle.style.backgroundColor = 'grey';
-  handle.style.borderRadius = '50%';
-  handle.style.height = iconSize;
-  handle.style.width = iconSize;
-  handle.style.lineHeight = iconSize;
-  handle.style.textAlign = 'center';
-  handle.style.verticalAlign = 'middle';
 
   handle.textContent = '\u2725';
 
@@ -27,17 +27,7 @@ function createDragHandle(): HTMLElement {
 
 function createCloseButton(): HTMLButtonElement {
   const button = document.createElement('button');
-
-  button.style.backgroundColor = 'grey';
-  button.style.border = '0';
-  button.style.borderRadius = '50%';
-  button.style.fontSize = '1rem';
-  button.style.height = iconSize;
-  button.style.width = iconSize;
-  button.style.lineHeight = iconSize;
-  button.style.padding = '0';
-  button.style.textAlign = 'center';
-  button.style.verticalAlign = 'middle';
+  button.className = 'closeButton';
 
   button.textContent = '\u2716';
 
@@ -47,41 +37,66 @@ function createCloseButton(): HTMLButtonElement {
 export default function openPictureInPicture(config: Config = {}): HTMLElement {
   const overlay = document.createElement('div');
 
-  overlay.style.borderRadius = '4px';
-  overlay.style.overflow = 'hidden';
-  overlay.style.padding = '.5em';
-  overlay.style.position = 'fixed';
-  overlay.style.resize = 'both';
-
-  overlay.onresize = (event) => {
-    event.preventDefault();
-  };
+  overlay.className = 'pipOverlay';
 
   const dragHandle = createDragHandle();
 
-  dragHandle.style.position = 'absolute';
-  dragHandle.style.transform = 'translate(-25%, -25%)';
+  // Slight offset on the dragging coordinates so the cursor is still somewhat center on the drag icon.
+  const offset = 10;
+  let isDragging = false;
+
+  const ondragover = (event: DragEvent) => {
+    event.preventDefault();
+  };
+
+  const ondrop = (event) => {
+    event.preventDefault();
+    overlay.style.top = `${event.pageY - offset}px`;
+    overlay.style.left = `${event.pageX - offset}px`;
+  };
+
+  dragHandle.ondragstart = (event) => {
+    isDragging = true;
+
+    event.dataTransfer.dropEffect = 'move';
+
+    window.addEventListener('dragover', ondragover);
+    window.addEventListener('drop', ondrop);
+  };
+
+  dragHandle.ondrag = throttle((event: DragEvent) => {
+    overlay.style.top = `${event.pageY - offset}px`;
+    overlay.style.left = `${event.pageX - offset}px`;
+  }, 1000 / 60);
+
+  dragHandle.ondragend = () => {
+    isDragging = false;
+
+    window.removeEventListener('dragover', ondragover);
+    window.removeEventListener('drop', ondrop);
+  };
 
   const closeButton = createCloseButton();
 
-  closeButton.style.position = 'absolute';
-  closeButton.style.left = `calc(${iconSize} * 3/2)`;
-  closeButton.style.transform = 'translate(-25%, -25%)';
-
   closeButton.onclick = config.events?.onclose;
 
-  overlay.append(closeButton);
+  const controlBar = createControlBar();
 
-  dragHandle.ondrag = throttle((event: DragEvent) => {
-    event.preventDefault();
+  controlBar.append(dragHandle, closeButton);
 
-    event.dataTransfer.setDragImage(document.createElement('div'), 0, 0);
+  controlBar.style.opacity = '0';
 
-    overlay.style.top = `${event.pageY}px`;
-    overlay.style.left = `${event.pageX}px`;
-  }, 1000 / 60);
+  overlay.append(controlBar);
 
-  overlay.appendChild(dragHandle);
+  overlay.onmouseenter = () => {
+    controlBar.style.opacity = '1';
+  };
+
+  overlay.onmouseleave = () => {
+    if (!isDragging) {
+      controlBar.style.opacity = '0';
+    }
+  };
 
   return overlay;
 }

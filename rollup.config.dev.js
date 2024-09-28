@@ -3,6 +3,7 @@ import html from '@rollup/plugin-html';
 import typescript from '@rollup/plugin-typescript';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import image from '@rollup/plugin-image';
+import postcss from 'rollup-plugin-postcss';
 
 export default [
   {
@@ -18,8 +19,9 @@ export default [
       commonjs(),
       typescript(),
       image(),
+      postcss(),
       html({
-        fileName: `index.html`,
+        fileName: 'index.html',
       }),
     ],
   },

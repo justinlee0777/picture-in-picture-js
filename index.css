@@ -1,0 +1,81 @@
+:root {
+  --icon-button-size: 1.5em;
+  --icon-size: 1em;
+}
+
+/* PIP CSS */
+.pipOverlay {
+  overflow: hidden;
+  position: fixed;
+}
+
+.dragHandle {
+  background-color: grey;
+  border-radius: 50%;
+  height: var(--icon-button-size);
+  line-height: var(--icon-button-size);
+  text-align: center;
+  vertical-align: middle;
+  width: var(--icon-button-size);
+}
+
+.closeButton {
+  background-color: grey;
+  border: 0;
+  border-radius: 50%;
+  font-size: 1rem;
+  height: var(--icon-button-size);
+  line-height: var(--icon-button-size);
+  margin-left: auto;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  width: var(--icon-button-size);
+}
+
+.controlBar {
+  align-items: center;
+  background-color: black;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+  padding: 0.5em;
+  transition: opacity 1s;
+}
+
+/* Trigger CSS */
+.triggerContainer {
+  position: relative;
+}
+
+.triggerButton {
+  align-items: center;
+  background-color: grey;
+  border: 0;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+  height: var(--icon-button-size);
+  left: 0;
+  line-height: var(--icon-button-size);
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  transform: translate(-25%, -25%);
+  width: var(--icon-button-size);
+}
+
+.triggerButtonIcon {
+  height: var(--icon-size);
+  width: var(--icon-size);
+}
+
+.screen {
+  background-color: black;
+  color: white;
+  text-align: center;
+  vertical-align: middle;
+}

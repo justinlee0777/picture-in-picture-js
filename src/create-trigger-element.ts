@@ -1,5 +1,4 @@
 import MiniplayerIcon from './assets/mini-player-svgrepo-com.svg';
-import iconSize from './consts/icon-size';
 import openPictureInPicture from './open-picture-in-picture';
 
 interface Config {
@@ -14,14 +13,10 @@ interface CreateScreenConfig {
 
 function createScreen({ width, height }: CreateScreenConfig): HTMLElement {
   const screen = document.createElement('p');
+  screen.className = 'screen';
 
-  screen.style.backgroundColor = 'black';
-  screen.style.color = 'white';
-  screen.style.lineHeight = `${height}px`;
   screen.style.height = `${height}px`;
-  screen.style.textAlign = 'center';
   screen.style.width = `${width}px`;
-  screen.style.verticalAlign = 'middle';
 
   // TODO customizable
   screen.textContent = 'This is displayed in picture-in-picture.';
@@ -37,38 +32,18 @@ export default function createTriggerElement(
   { onpipopened, onpipclosed }: Config = {},
 ): HTMLElement {
   const container = document.createElement('div');
-
-  container.style.position = 'relative';
+  container.className = 'triggerContainer';
 
   const triggerButton = document.createElement('button');
-  const triggerIconSize = '1em';
-
-  triggerButton.style.alignItems = 'center';
-  triggerButton.style.backgroundColor = 'grey';
-  triggerButton.style.border = '0';
-  triggerButton.style.borderRadius = '50%';
-  triggerButton.style.display = 'flex';
-  triggerButton.style.flexDirection = 'column';
-  triggerButton.style.fontSize = '1rem';
-  triggerButton.style.height = iconSize;
-  triggerButton.style.justifyContent = 'center';
-  triggerButton.style.width = iconSize;
-  triggerButton.style.lineHeight = iconSize;
-  triggerButton.style.padding = '0';
+  triggerButton.className = 'triggerButton';
 
   const triggerIcon = document.createElement('img');
+  triggerIcon.className = 'triggerButtonIcon';
   triggerIcon.src = MiniplayerIcon;
-  triggerIcon.style.height = triggerIconSize;
-  triggerIcon.style.width = triggerIconSize;
 
   triggerButton.appendChild(triggerIcon);
 
   container.appendChild(triggerButton);
-
-  triggerButton.style.position = 'absolute';
-  triggerButton.style.top = '0';
-  triggerButton.style.left = '0';
-  triggerButton.style.transform = 'translate(-25%, -25%)';
 
   container.appendChild(content);
 
