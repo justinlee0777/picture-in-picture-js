@@ -16,6 +16,7 @@ function createScreen({ width, height }: CreateScreenConfig): HTMLElement {
   screen.className = 'screen';
 
   screen.style.height = `${height}px`;
+  screen.style.lineHeight = `${height}px`;
   screen.style.width = `${width}px`;
 
   // TODO customizable
@@ -24,9 +25,6 @@ function createScreen({ width, height }: CreateScreenConfig): HTMLElement {
   return screen;
 }
 
-/**
- * TODO Keep track of the PIP on the screen, so that triggers will close properly
- */
 export default function createTriggerElement(
   content: Element,
   { onpipopened, onpipclosed }: Config = {},
@@ -47,7 +45,6 @@ export default function createTriggerElement(
 
   container.appendChild(content);
 
-  // todo
   let pip: HTMLElement | undefined;
 
   let screen: HTMLElement;
@@ -66,8 +63,11 @@ export default function createTriggerElement(
 
     triggerButton.remove();
 
-    // todo check if already exists
-    pip = openPictureInPicture();
+    pip = openPictureInPicture({
+      events: {
+        onclose: onpipclosed,
+      },
+    });
 
     pip.appendChild(content);
 

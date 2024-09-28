@@ -34,10 +34,18 @@ function createCloseButton(): HTMLButtonElement {
   return button;
 }
 
-export default function openPictureInPicture(config: Config = {}): HTMLElement {
-  const overlay = document.createElement('div');
+type HTMLPIPElement = HTMLElement & {
+  pictureInPicture: {
+    close: () => void;
+  };
+};
+
+function createPictureInPicture(config: Config = {}): HTMLPIPElement {
+  const overlay = document.createElement('div') as unknown as HTMLPIPElement;
 
   overlay.className = 'pipOverlay';
+  overlay.style.top = '1em';
+  overlay.style.left = '1em';
 
   const dragHandle = createDragHandle();
 
@@ -98,5 +106,21 @@ export default function openPictureInPicture(config: Config = {}): HTMLElement {
     }
   };
 
+  overlay.pictureInPicture = {
+    close: config.events?.onclose ?? (() => {}),
+  };
+
   return overlay;
+}
+
+let currentPIP: HTMLPIPElement | undefined;
+export default function openPictureInPicture(
+  config: Config = {},
+): HTMLPIPElement {
+  if (currentPIP) {
+    currentPIP.pictureInPicture.close();
+    currentPIP.remove();
+  }
+
+  return (currentPIP = createPictureInPicture(config));
 }

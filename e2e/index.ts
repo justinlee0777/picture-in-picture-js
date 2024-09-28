@@ -17,4 +17,24 @@ window.addEventListener('DOMContentLoaded', async () => {
   const trigger = createTriggerElement(content);
 
   document.body.appendChild(trigger);
+
+  const content2 = document.createElement('iframe');
+
+  content2.src =
+    'https://www.youtube.com/embed/prGhk_Gvzwo?si=FPy-oTOekRVO745S';
+  content2.title = 'Youtube video player';
+  content2.setAttribute('frameborder', '0');
+  content2.setAttribute(
+    'allow',
+    'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+  );
+  content2.setAttribute('allowfullscreen', 'true');
+
+  const trigger2 = createTriggerElement(content2);
+
+  document.body.appendChild(trigger2);
+
+  document.body.style.display = 'flex';
+  document.body.style.flexDirection = 'column';
+  document.body.style.alignItems = 'center';
 });
