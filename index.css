@@ -5,8 +5,19 @@
 
 /* PIP CSS */
 .pipOverlay {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   position: fixed;
+}
+
+.pipOverlay.shrunk {
+  flex-direction: row;
+}
+
+.pipOverlay.shrunk .controlBar {
+  border-radius: 4px 0 0 4px;
+  flex-direction: column;
 }
 
 .dragHandle {

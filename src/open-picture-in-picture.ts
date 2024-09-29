@@ -49,19 +49,88 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
 
   const dragHandle = createDragHandle();
 
-  // Slight offset on the dragging coordinates so the cursor is still somewhat center on the drag icon.
-  const offset = 10;
+  let originalWidth: number | undefined, originalHeight: number | undefined;
+
+  // Detect when the overlay is finally added to the DOM and get its original width. Then destroy the observer.
+  let observer: MutationObserver;
+  observer = new MutationObserver(() => {
+    if (document.contains(overlay)) {
+      originalWidth = overlay.clientWidth;
+      originalHeight = overlay.clientHeight;
+
+      overlay.style.width = `${originalWidth}px`;
+      overlay.style.height = `${originalHeight}px`;
+
+      observer.disconnect();
+    }
+  });
+
+  observer.observe(document, {
+    attributes: false,
+    childList: true,
+    characterData: false,
+    subtree: true,
+  });
+
+  /* If the overlay is dramatically resized, move the control bar to the left instead of the top. */
+  const maxWidth = 200;
+  const shrunkenClass = 'shrunk';
+  // Do not allow less than these pixels to be hidden.
+  const dragLimit = 40;
+
   let isDragging = false;
+
+  const moveOverlay = (event: DragEvent) => {
+    const overlayNewY = event.pageY - dragHandle.offsetTop;
+
+    const { innerHeight, innerWidth } = window;
+    if (innerHeight - overlayNewY > dragLimit) {
+      overlay.style.top = `${overlayNewY}px`;
+      const overlayEndY = overlayNewY + originalHeight;
+
+      const heightDifference = overlayEndY - innerHeight;
+
+      if (heightDifference > 0) {
+        overlay.style.height = `${originalHeight - heightDifference}px`;
+      } else {
+        delete overlay.style.height;
+      }
+    }
+
+    const overlayNewX = event.pageX - dragHandle.offsetLeft;
+
+    if (innerWidth - overlayNewX > dragLimit) {
+      overlay.style.left = `${overlayNewX}px`;
+
+      const overlayEndX = overlayNewX + originalWidth;
+
+      const widthDifference = overlayEndX - innerWidth;
+
+      let finalWidth: number;
+
+      if (widthDifference > 0) {
+        finalWidth = originalWidth - widthDifference;
+
+        overlay.style.width = `${finalWidth}px`;
+      } else {
+        finalWidth = originalWidth;
+
+        delete overlay.style.width;
+      }
+
+      if (finalWidth < maxWidth) {
+        overlay.classList.add(shrunkenClass);
+      } else {
+        overlay.classList.remove(shrunkenClass);
+      }
+    }
+  };
 
   const ondragover = (event: DragEvent) => {
     event.preventDefault();
   };
 
-  const ondrop = (event) => {
-    event.preventDefault();
-    overlay.style.top = `${event.pageY - offset}px`;
-    overlay.style.left = `${event.pageX - offset}px`;
-  };
+  const ondrop = moveOverlay;
 
   dragHandle.ondragstart = (event) => {
     isDragging = true;
@@ -72,10 +141,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     window.addEventListener('drop', ondrop);
   };
 
-  dragHandle.ondrag = throttle((event: DragEvent) => {
-    overlay.style.top = `${event.pageY - offset}px`;
-    overlay.style.left = `${event.pageX - offset}px`;
-  }, 1000 / 60);
+  dragHandle.ondrag = throttle(moveOverlay, 1000 / 60);
 
   dragHandle.ondragend = () => {
     isDragging = false;
