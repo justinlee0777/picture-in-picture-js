@@ -1,6 +1,10 @@
 import throttle from 'lodash-es/throttle';
 
-interface Config {
+export interface Config {
+  behavior?: {
+    /** Automatically lock the overlay into one of the four quarters of the screen. */
+    autoLock?: boolean;
+  };
   events?: {
     onclose?: () => void;
   };
@@ -80,20 +84,22 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
 
   let isDragging = false;
 
+  const autoLock = config?.behavior?.autoLock ?? false;
+
   const moveOverlay = (event: DragEvent) => {
     const overlayNewY = event.pageY - dragHandle.offsetTop;
 
     const { innerHeight, innerWidth } = window;
     if (innerHeight - overlayNewY > dragLimit) {
       overlay.style.top = `${overlayNewY}px`;
-      const overlayEndY = overlayNewY + originalHeight;
+      const overlayEndY = overlayNewY + originalHeight!;
 
       const heightDifference = overlayEndY - innerHeight;
 
       if (heightDifference > 0) {
-        overlay.style.height = `${originalHeight - heightDifference}px`;
+        overlay.style.height = `${originalHeight! - heightDifference}px`;
       } else {
-        delete overlay.style.height;
+        overlay.style.height = '';
       }
     }
 
@@ -102,20 +108,20 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     if (innerWidth - overlayNewX > dragLimit) {
       overlay.style.left = `${overlayNewX}px`;
 
-      const overlayEndX = overlayNewX + originalWidth;
+      const overlayEndX = overlayNewX + originalWidth!;
 
       const widthDifference = overlayEndX - innerWidth;
 
       let finalWidth: number;
 
       if (widthDifference > 0) {
-        finalWidth = originalWidth - widthDifference;
+        finalWidth = originalWidth! - widthDifference;
 
         overlay.style.width = `${finalWidth}px`;
       } else {
-        finalWidth = originalWidth;
+        finalWidth = originalWidth!;
 
-        delete overlay.style.width;
+        overlay.style.width = '';
       }
 
       if (finalWidth < maxWidth) {
@@ -130,18 +136,59 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     event.preventDefault();
   };
 
-  const ondrop = moveOverlay;
+  const ondrop = (event: DragEvent) => {
+    isDragging = false;
+    moveOverlay(event);
+
+    if (autoLock) {
+      const pattern = /(\d+)px/;
+
+      const calculatedX = Number(overlay.style.left.match(pattern)!.at(1));
+      const calculatedY = Number(overlay.style.top.match(pattern)!.at(1));
+
+      const { innerWidth, innerHeight } = window;
+
+      const midpointX = innerWidth / 2;
+      const midpointY = innerHeight / 2;
+
+      let left: string;
+      let top: string;
+
+      if (calculatedX < midpointX) {
+        left = '1em';
+      } else {
+        left = `calc(${innerWidth}px - ${overlay.clientWidth}px - 1em)`;
+      }
+
+      if (calculatedY < midpointY) {
+        top = '1em';
+      } else {
+        top = `calc(${innerHeight}px - ${overlay.clientHeight}px - 1em)`;
+      }
+
+      overlay
+        .animate([{ top, left }], { duration: 1000 / 6 })
+        .finished.then(() => {
+          overlay.style.top = top;
+          overlay.style.left = left;
+        });
+    }
+  };
 
   dragHandle.ondragstart = (event) => {
     isDragging = true;
 
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer!.dropEffect = 'move';
 
     window.addEventListener('dragover', ondragover);
     window.addEventListener('drop', ondrop);
   };
 
-  dragHandle.ondrag = throttle(moveOverlay, 1000 / 60);
+  dragHandle.ondrag = throttle((event: DragEvent) => {
+    if (isDragging) {
+      moveOverlay(event);
+    }
+  }, 1000 / 60);
 
   dragHandle.ondragend = () => {
     isDragging = false;
@@ -152,7 +199,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
 
   const closeButton = createCloseButton();
 
-  closeButton.onclick = config.events?.onclose;
+  closeButton.onclick = config.events?.onclose ?? null;
 
   const controlBar = createControlBar();
 

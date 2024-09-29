@@ -30,7 +30,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   );
   content2.setAttribute('allowfullscreen', 'true');
 
-  const trigger2 = createTriggerElement(content2);
+  const trigger2 = createTriggerElement(content2, { autoLock: true });
 
   document.body.appendChild(trigger2);
 

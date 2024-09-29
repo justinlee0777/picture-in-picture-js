@@ -1,10 +1,12 @@
 import MiniplayerIcon from './assets/mini-player-svgrepo-com.svg';
-import openPictureInPicture from './open-picture-in-picture';
+import openPictureInPicture, {
+  Config as PictureInPictureConfig,
+} from './open-picture-in-picture';
 
-interface Config {
+type Config = {
   onpipopened?: () => void;
   onpipclosed?: () => void;
-}
+} & PictureInPictureConfig['behavior'];
 
 interface CreateScreenConfig {
   height: number;
@@ -19,7 +21,6 @@ function createScreen({ width, height }: CreateScreenConfig): HTMLElement {
   screen.style.lineHeight = `${height}px`;
   screen.style.width = `${width}px`;
 
-  // TODO customizable
   screen.textContent = 'This is displayed in picture-in-picture.';
 
   return screen;
@@ -27,7 +28,7 @@ function createScreen({ width, height }: CreateScreenConfig): HTMLElement {
 
 export default function createTriggerElement(
   content: Element,
-  { onpipopened, onpipclosed }: Config = {},
+  { onpipopened, onpipclosed, autoLock }: Config = {},
 ): HTMLElement {
   const container = document.createElement('div');
   container.className = 'triggerContainer';
@@ -66,6 +67,9 @@ export default function createTriggerElement(
     pip = openPictureInPicture({
       events: {
         onclose: onpipclosed,
+      },
+      behavior: {
+        autoLock,
       },
     });
 
