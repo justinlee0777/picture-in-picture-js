@@ -9,6 +9,7 @@
   flex-direction: column;
   overflow: hidden;
   position: fixed;
+  resize: both;
 }
 
 .pipOverlay.shrunk {
@@ -49,10 +50,14 @@
   background-color: black;
   border-radius: 4px 4px 0 0;
   display: flex;
+  flex: none;
   flex-direction: row;
   gap: 1em;
+  overflow: hidden;
   padding: 0.5em;
   transition: opacity 1s;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Trigger CSS */

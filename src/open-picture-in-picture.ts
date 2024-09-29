@@ -18,17 +18,6 @@ function createControlBar(): HTMLElement {
   return controlBar;
 }
 
-function createDragHandle(): HTMLElement {
-  const handle = document.createElement('div');
-  handle.className = 'dragHandle';
-
-  handle.draggable = true;
-
-  handle.textContent = '\u2725';
-
-  return handle;
-}
-
 function createCloseButton(): HTMLButtonElement {
   const button = document.createElement('button');
   button.className = 'closeButton';
@@ -51,11 +40,10 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
   overlay.style.top = '1em';
   overlay.style.left = '1em';
 
-  const dragHandle = createDragHandle();
+  // Detect when the overlay is finally added to the DOM and get its original width. Then destroy the observer.
 
   let originalWidth: number | undefined, originalHeight: number | undefined;
 
-  // Detect when the overlay is finally added to the DOM and get its original width. Then destroy the observer.
   let observer: MutationObserver;
   observer = new MutationObserver(() => {
     if (document.contains(overlay)) {
@@ -76,7 +64,43 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     subtree: true,
   });
 
+  const closeButton = createCloseButton();
+
+  closeButton.onclick = config.events?.onclose ?? null;
+
+  // beginning of control bar code
+
+  const controlBar = createControlBar();
+
+  controlBar.append(closeButton);
+
+  controlBar.style.opacity = '0';
+
+  // when the control bar is double-clicked, expand or shrink the overlay by twice its current size.
+  // this is a mobile-specific feature.
+  controlBar.ondblclick = () => {
+    let newWidth, newHeight;
+
+    if (overlay.clientWidth < originalWidth!) {
+      newWidth = `${originalWidth}px`;
+      newHeight = `${originalHeight}px`;
+    } else {
+      newWidth = `${originalWidth! / 2}px`;
+      newHeight = `${originalHeight! / 2}px`;
+    }
+
+    overlay
+      .animate([{ width: newWidth, height: newHeight }], { duration: 1000 / 6 })
+      .finished.then(() => {
+        overlay.style.width = newWidth;
+        overlay.style.height = newHeight;
+      });
+  };
+
+  // Dragging code
   /* If the overlay is dramatically resized, move the control bar to the left instead of the top. */
+  controlBar.draggable = true;
+
   const maxWidth = 200;
   const shrunkenClass = 'shrunk';
   // Do not allow less than these pixels to be hidden.
@@ -87,7 +111,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
   const autoLock = config?.behavior?.autoLock ?? false;
 
   const moveOverlay = (event: DragEvent) => {
-    const overlayNewY = event.pageY - dragHandle.offsetTop;
+    const overlayNewY = event.pageY - controlBar.offsetTop;
 
     const { innerHeight, innerWidth } = window;
     if (innerHeight - overlayNewY > dragLimit) {
@@ -103,7 +127,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
       }
     }
 
-    const overlayNewX = event.pageX - dragHandle.offsetLeft;
+    const overlayNewX = event.pageX - controlBar.offsetLeft;
 
     if (innerWidth - overlayNewX > dragLimit) {
       overlay.style.left = `${overlayNewX}px`;
@@ -175,37 +199,35 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     }
   };
 
-  dragHandle.ondragstart = (event) => {
+  controlBar.ondragstart = (event) => {
     isDragging = true;
 
+    const img = new Image();
+    img.src =
+      'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    event.dataTransfer!.setDragImage(img, 0, 0);
     event.dataTransfer!.dropEffect = 'move';
 
     window.addEventListener('dragover', ondragover);
     window.addEventListener('drop', ondrop);
   };
 
-  dragHandle.ondrag = throttle((event: DragEvent) => {
+  controlBar.ondrag = throttle((event: DragEvent) => {
     if (isDragging) {
       moveOverlay(event);
     }
   }, 1000 / 60);
 
-  dragHandle.ondragend = () => {
+  controlBar.ondragend = () => {
     isDragging = false;
 
     window.removeEventListener('dragover', ondragover);
     window.removeEventListener('drop', ondrop);
   };
 
-  const closeButton = createCloseButton();
+  // end of dragging code
 
-  closeButton.onclick = config.events?.onclose ?? null;
-
-  const controlBar = createControlBar();
-
-  controlBar.append(dragHandle, closeButton);
-
-  controlBar.style.opacity = '0';
+  // end of control bar code
 
   overlay.append(controlBar);
 
