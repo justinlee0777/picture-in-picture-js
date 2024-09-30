@@ -17,7 +17,9 @@ export default [
         moduleDirectories: ['node_modules'],
       }),
       commonjs(),
-      typescript(),
+      typescript({
+        tsconfig: './tsconfig.dev.json',
+      }),
       image(),
       postcss(),
       html({

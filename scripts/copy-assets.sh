@@ -1,0 +1,1 @@
+cp ./index.css ./LICENSE ./package.json dist

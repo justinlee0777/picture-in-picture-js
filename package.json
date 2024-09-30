@@ -1,10 +1,15 @@
 {
   "name": "picture-in-picture-js",
   "version": "0.0.0",
+  "sideEffects": false,
   "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
   "type": "module",
   "scripts": {
     "start": "rollup -c ./rollup.config.dev.js && http-server -c-1 -p 3000 dev",
+    "build": "rm -rf dist && rollup -c ./rollup.config.js && ./scripts/copy-assets.sh",
     "format": "prettier --write .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
