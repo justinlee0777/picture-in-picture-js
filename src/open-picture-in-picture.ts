@@ -27,7 +27,7 @@ function createCloseButton(): HTMLButtonElement {
   return button;
 }
 
-type HTMLPIPElement = HTMLElement & {
+export type HTMLPIPElement = HTMLElement & {
   pictureInPicture: {
     close: () => void;
   };
@@ -165,10 +165,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     moveOverlay(event);
 
     if (autoLock) {
-      const pattern = /(\d+)px/;
-
-      const calculatedX = Number(overlay.style.left.match(pattern)!.at(1));
-      const calculatedY = Number(overlay.style.top.match(pattern)!.at(1));
+      const { x, y } = overlay.getBoundingClientRect();
 
       const { innerWidth, innerHeight } = window;
 
@@ -178,13 +175,13 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
       let left: string;
       let top: string;
 
-      if (calculatedX < midpointX) {
+      if (x < midpointX) {
         left = '1em';
       } else {
         left = `calc(${innerWidth}px - ${overlay.clientWidth}px - 1em)`;
       }
 
-      if (calculatedY < midpointY) {
+      if (y < midpointY) {
         top = '1em';
       } else {
         top = `calc(${innerHeight}px - ${overlay.clientHeight}px - 1em)`;
