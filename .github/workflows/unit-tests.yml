@@ -1,0 +1,19 @@
+name: Run unit tests
+run-name: Running unit tests
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    name: Continuous integration
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+      - name: Install Dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm run test
