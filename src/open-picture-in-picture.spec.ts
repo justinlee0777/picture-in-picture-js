@@ -289,4 +289,43 @@ describe('openPictureInPicture()', () => {
     expect(pip.style.top).toBe('calc(768px - 300px - 1em)');
     expect(pip.style.left).toBe('1em');
   });
+
+  test('automatically slides the overlay to the side when autolock is enabled', async () => {
+    const content = document.createElement('p');
+
+    content.textContent =
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+
+    const pip = openPictureInPicture({ behavior: { autoLock: true } });
+
+    pip.appendChild(content);
+
+    // JSDOM does no sizing
+    jest.spyOn(pip, 'clientWidth', 'get').mockReturnValue(150);
+    jest.spyOn(pip, 'clientHeight', 'get').mockReturnValue(300);
+
+    document.body.appendChild(pip);
+
+    await new Promise(process.nextTick);
+
+    const controlBar = pip.querySelector('.controlBar')!;
+
+    pip.animate = () => ({ finished: Promise.resolve() }) as any;
+
+    let originX = 900,
+      originY = 100;
+
+    jest
+      .spyOn(pip, 'getBoundingClientRect')
+      .mockImplementation(() => ({ x: originX, y: originY }) as any);
+
+    controlBar.dispatchEvent(createMockDragEvent('dragstart', 0, 0));
+
+    window.dispatchEvent(createMockDragEvent('drop', originY, originX));
+
+    await new Promise((resolve) => setTimeout(resolve, 1000 / 6));
+
+    expect(pip.style.top).toBe('100px');
+    expect(pip.style.left).toBe('984px');
+  });
 });

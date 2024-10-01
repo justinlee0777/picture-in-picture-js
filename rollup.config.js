@@ -16,7 +16,7 @@ const packageJson = JSON.parse(packageJsonString);
 
 writeFileSync(
   `./${distFolder}/package.json`,
-  JSON.stringify({ ...packageJson, sideEffects: false }),
+  JSON.stringify({ ...packageJson, sideEffects: false }, null, 2),
 );
 
 export default [

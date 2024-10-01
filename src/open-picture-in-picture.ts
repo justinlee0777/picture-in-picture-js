@@ -41,17 +41,17 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
   overlay.style.left = '1em';
 
   // Detect when the overlay is finally added to the DOM and get its original width. Then destroy the observer.
-
   let originalWidth: number | undefined, originalHeight: number | undefined;
+  let currentWidth: number | undefined, currentHeight: number | undefined;
 
   let observer: MutationObserver;
   observer = new MutationObserver(() => {
     if (document.contains(overlay)) {
-      originalWidth = overlay.clientWidth;
-      originalHeight = overlay.clientHeight;
+      originalWidth = currentWidth = overlay.clientWidth;
+      originalHeight = currentHeight = overlay.clientHeight;
 
-      overlay.style.width = `${originalWidth}px`;
-      overlay.style.height = `${originalHeight}px`;
+      overlay.style.width = `${currentWidth}px`;
+      overlay.style.height = `${currentHeight}px`;
 
       observer.disconnect();
     }
@@ -82,12 +82,15 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     let newWidth, newHeight;
 
     if (overlay.clientWidth < originalWidth!) {
-      newWidth = `${originalWidth}px`;
-      newHeight = `${originalHeight}px`;
+      currentWidth = originalWidth;
+      currentHeight = originalHeight;
     } else {
-      newWidth = `${originalWidth! / 2}px`;
-      newHeight = `${originalHeight! / 2}px`;
+      currentWidth = originalWidth! / 2;
+      currentHeight = originalHeight! / 2;
     }
+
+    newWidth = `${currentWidth}px`;
+    newHeight = `${currentHeight}px`;
 
     overlay
       .animate([{ width: newWidth, height: newHeight }], { duration: 1000 / 6 })
@@ -98,10 +101,9 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
   };
 
   // Dragging code
-  /* If the overlay is dramatically resized, move the control bar to the left instead of the top. */
   controlBar.draggable = true;
 
-  const maxWidth = 200;
+  /* If the overlay is dramatically resized, move the control bar to the left instead of the top. */
   const shrunkenClass = 'shrunk';
   // Do not allow less than these pixels to be hidden.
   const dragLimit = 40;
@@ -116,15 +118,19 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     const { innerHeight, innerWidth } = window;
     if (innerHeight - overlayNewY > dragLimit) {
       overlay.style.top = `${overlayNewY}px`;
-      const overlayEndY = overlayNewY + originalHeight!;
+      const overlayEndY = overlayNewY + currentHeight!;
 
       const heightDifference = overlayEndY - innerHeight;
 
+      let finalHeight: number;
+
       if (heightDifference > 0) {
-        overlay.style.height = `${originalHeight! - heightDifference}px`;
+        finalHeight = currentHeight! - heightDifference;
       } else {
-        overlay.style.height = '';
+        finalHeight = currentHeight!;
       }
+
+      overlay.style.height = `${finalHeight}px`;
     }
 
     const overlayNewX = event.pageX - controlBar.offsetLeft;
@@ -132,27 +138,21 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     if (innerWidth - overlayNewX > dragLimit) {
       overlay.style.left = `${overlayNewX}px`;
 
-      const overlayEndX = overlayNewX + originalWidth!;
+      const overlayEndX = overlayNewX + currentWidth!;
 
       const widthDifference = overlayEndX - innerWidth;
 
       let finalWidth: number;
 
       if (widthDifference > 0) {
-        finalWidth = originalWidth! - widthDifference;
-
-        overlay.style.width = `${finalWidth}px`;
-      } else {
-        finalWidth = originalWidth!;
-
-        overlay.style.width = '';
-      }
-
-      if (finalWidth < maxWidth) {
+        finalWidth = currentWidth! - widthDifference;
         overlay.classList.add(shrunkenClass);
       } else {
+        finalWidth = currentWidth!;
         overlay.classList.remove(shrunkenClass);
       }
+
+      overlay.style.width = `${finalWidth}px`;
     }
   };
 
@@ -166,6 +166,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
 
     if (autoLock) {
       const { x, y } = overlay.getBoundingClientRect();
+      const isShrunk = overlay.classList.contains('shrunk');
 
       const { innerWidth, innerHeight } = window;
 
@@ -175,13 +176,17 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
       let left: string;
       let top: string;
 
-      if (x < midpointX) {
+      if (isShrunk) {
+        left = `${innerWidth - dragLimit}px`;
+      } else if (x < midpointX) {
         left = '1em';
       } else {
         left = `calc(${innerWidth}px - ${overlay.clientWidth}px - 1em)`;
       }
 
-      if (y < midpointY) {
+      if (isShrunk) {
+        top = `${y}px`;
+      } else if (y < midpointY) {
         top = '1em';
       } else {
         top = `calc(${innerHeight}px - ${overlay.clientHeight}px - 1em)`;
