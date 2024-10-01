@@ -328,4 +328,30 @@ describe('openPictureInPicture()', () => {
     expect(pip.style.top).toBe('100px');
     expect(pip.style.left).toBe('984px');
   });
+
+  test("closes the overlay properly if the overlay's close is modified (bit of a hack tbh)", () => {
+    const content = document.createElement('p');
+
+    content.textContent =
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+
+    const pip = openPictureInPicture({ behavior: { autoLock: true } });
+
+    pip.appendChild(content);
+
+    const spy = jest.fn();
+
+    const originalClose = pip.pictureInPicture.close;
+
+    pip.pictureInPicture.close = () => {
+      originalClose();
+      spy();
+    };
+
+    const closeButton = pip.querySelector('.closeButton')! as HTMLButtonElement;
+
+    closeButton.click();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
 });

@@ -66,7 +66,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
 
   const closeButton = createCloseButton();
 
-  closeButton.onclick = config.events?.onclose ?? null;
+  closeButton.onclick = () => overlay.pictureInPicture.close();
 
   // beginning of control bar code
 

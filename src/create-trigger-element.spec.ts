@@ -1,19 +1,21 @@
 jest.mock('./assets/mini-player-svgrepo-com.svg', () => () => './example.png');
 
-jest.mock('./open-picture-in-picture', () => ({ events }) => {
+jest.mock('./open-picture-in-picture', () => ({ events }: { events? } = {}) => {
   const overlay = document.createElement('div');
 
   overlay.className = 'pipOverlay';
 
   (overlay as any).pictureInPicture = {
-    close: events.onclose,
+    close: events?.onclose,
   };
 
   return overlay;
 });
 
 import createTriggerElement from './create-trigger-element';
-import { HTMLPIPElement } from './open-picture-in-picture';
+import openPictureInPicture, {
+  HTMLPIPElement,
+} from './open-picture-in-picture';
 
 describe('createTriggerElement', () => {
   let content: HTMLElement;
@@ -49,6 +51,7 @@ describe('createTriggerElement', () => {
     const triggerElement = createTriggerElement(content, { replaceWith: true });
 
     expect(document.body.contains(content)).toBe(true);
+    expect(document.body.contains(triggerElement)).toBe(true);
   });
 
   test('opens the picture-in-picture', () => {
@@ -93,5 +96,53 @@ describe('createTriggerElement', () => {
     expect(triggerElement.querySelector('.screen')).toBeFalsy();
     expect(document.body.querySelector('.pipOverlay')).toBeFalsy();
     expect(triggerElement.contains(content));
+  });
+
+  test('uses existing overlays', async () => {
+    const existingPIP = openPictureInPicture();
+
+    const triggerElement = createTriggerElement(content, { existingPIP });
+
+    document.body.append(existingPIP, triggerElement);
+
+    // For the MutationObserver
+    await new Promise(process.nextTick);
+
+    const screen = triggerElement.querySelector('.screen')!;
+
+    expect(screen).toBeTruthy();
+    expect(screen.textContent).toBe('This is displayed in picture-in-picture.');
+  });
+
+  test('informs the client an overlay is created', () => {
+    const onpipcreated = jest.fn();
+
+    const triggerElement = createTriggerElement(content, { onpipcreated });
+
+    const triggerButton = triggerElement.querySelector(
+      '.triggerButton',
+    )! as HTMLElement;
+
+    triggerButton.click();
+
+    expect(onpipcreated).toHaveBeenCalledTimes(1);
+  });
+
+  test('informs the client an overlay is being destroyed', () => {
+    const onpipdestroyed = jest.fn();
+
+    const triggerElement = createTriggerElement(content, { onpipdestroyed });
+
+    const triggerButton = triggerElement.querySelector(
+      '.triggerButton',
+    )! as HTMLElement;
+
+    triggerButton.click();
+
+    const pip = document.body.querySelector('.pipOverlay')! as HTMLPIPElement;
+
+    pip.pictureInPicture.close();
+
+    expect(onpipdestroyed).toHaveBeenCalledTimes(1);
   });
 });
