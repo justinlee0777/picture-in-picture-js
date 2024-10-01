@@ -43,6 +43,14 @@ describe('createTriggerElement', () => {
     expect(triggerElement.contains(content)).toBe(true);
   });
 
+  test('replaces the content', () => {
+    document.body.appendChild(content);
+
+    const triggerElement = createTriggerElement(content, { replaceWith: true });
+
+    expect(document.body.contains(content)).toBe(true);
+  });
+
   test('opens the picture-in-picture', () => {
     const triggerElement = createTriggerElement(content);
 

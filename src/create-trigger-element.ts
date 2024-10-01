@@ -4,6 +4,9 @@ import openPictureInPicture, {
 } from './open-picture-in-picture';
 
 type Config = {
+  /** Whether the trigger should be replaced with the trigger's content in terms of its place in its parent. */
+  replaceWith?: boolean;
+
   onpipopened?: () => void;
   onpipclosed?: () => void;
 } & PictureInPictureConfig['behavior'];
@@ -28,7 +31,7 @@ function createScreen({ width, height }: CreateScreenConfig): HTMLElement {
 
 export default function createTriggerElement(
   content: Element,
-  { onpipopened, onpipclosed, autoLock }: Config = {},
+  { replaceWith, onpipopened, onpipclosed, autoLock }: Config = {},
 ): HTMLElement {
   const container = document.createElement('div');
   container.className = 'triggerContainer';
@@ -43,6 +46,10 @@ export default function createTriggerElement(
   triggerButton.appendChild(triggerIcon);
 
   container.appendChild(triggerButton);
+
+  if (replaceWith) {
+    content.replaceWith(container);
+  }
 
   container.appendChild(content);
 

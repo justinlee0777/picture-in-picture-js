@@ -207,7 +207,7 @@ describe('openPictureInPicture()', () => {
     expect(pip.style.width).toBe('100px');
   });
 
-  test.only('autolocks PIP on the corners of the screen', async () => {
+  test('autolocks PIP on the corners of the screen', async () => {
     const content = document.createElement('p');
 
     content.textContent =
