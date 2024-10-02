@@ -66,7 +66,13 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
 
   const closeButton = createCloseButton();
 
-  closeButton.onclick = () => overlay.pictureInPicture.close();
+  /*
+   * Apparently touchstart and click both trigger together.
+   * Without the touchstart, the click on the close button is ignored.
+   * https://stackoverflow.com/questions/9633297/touchstart-vs-click-what-happens-under-the-hood
+   */
+  closeButton.onclick = closeButton.ontouchstart = () =>
+    overlay.pictureInPicture.close();
 
   // beginning of control bar code
 

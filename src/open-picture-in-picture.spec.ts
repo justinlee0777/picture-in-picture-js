@@ -381,6 +381,27 @@ describe('openPictureInPicture()', () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
+  test('closes the overlay with a touch', () => {
+    const content = document.createElement('p');
+
+    content.textContent =
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+
+    const onclose = jest.fn();
+    const pip = openPictureInPicture({
+      behavior: { autoLock: true },
+      events: { onclose },
+    });
+
+    pip.appendChild(content);
+
+    const closeButton = pip.querySelector('.closeButton')! as HTMLButtonElement;
+
+    closeButton.ontouchstart!(createMockTouchEvent('touchstart', 0, 0));
+
+    expect(onclose).toHaveBeenCalledTimes(1);
+  });
+
   test('touch-drags on mobile', async () => {
     const content = document.createElement('p');
 
