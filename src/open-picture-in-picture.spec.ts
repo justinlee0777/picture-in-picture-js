@@ -20,6 +20,32 @@ describe('openPictureInPicture()', () => {
     return event;
   }
 
+  function createMockTouchEvent(
+    type: 'touchstart' | 'touchmove' | 'touchend',
+    clientY: number,
+    clientX: number,
+  ): TouchEvent {
+    const event = new Event(type) as any;
+
+    if (type !== 'touchend') {
+      event.touches = [
+        {
+          clientX,
+          clientY,
+        },
+      ];
+    } else {
+      event.changedTouches = [
+        {
+          clientX,
+          clientY,
+        },
+      ];
+    }
+
+    return event;
+  }
+
   afterEach(() => {
     document.getElementsByTagName('html')[0].innerHTML = '';
   });
@@ -146,8 +172,8 @@ describe('openPictureInPicture()', () => {
 
     window.dispatchEvent(createMockDragEvent('drop', 225, 225));
 
-    expect(pip.style.top).toBe('100px');
-    expect(pip.style.left).toBe('100px');
+    expect(pip.style.top).toBe('225px');
+    expect(pip.style.left).toBe('225px');
   });
 
   test('does not move the PIP past a certain point', async () => {
@@ -353,5 +379,66 @@ describe('openPictureInPicture()', () => {
     closeButton.click();
 
     expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  test('touch-drags on mobile', async () => {
+    const content = document.createElement('p');
+
+    content.textContent =
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+
+    const pip = openPictureInPicture({ behavior: { autoLock: true } });
+
+    pip.appendChild(content);
+
+    // JSDOM does no sizing
+    jest.spyOn(pip, 'clientWidth', 'get').mockReturnValue(150);
+    jest.spyOn(pip, 'clientHeight', 'get').mockReturnValue(300);
+
+    document.body.appendChild(pip);
+
+    await new Promise(process.nextTick);
+
+    const controlBar = pip.querySelector('.controlBar')! as HTMLElement;
+
+    pip.animate = () => ({ finished: Promise.resolve() }) as any;
+
+    let originX = 0,
+      originY = 0;
+
+    jest
+      .spyOn(pip, 'getBoundingClientRect')
+      .mockImplementation(() => ({ x: originX, y: originY }) as any);
+
+    controlBar.ontouchstart!(
+      createMockTouchEvent('touchstart', originY, originX),
+    );
+
+    originX = 225;
+    originY = 75;
+
+    controlBar.ontouchmove!(
+      createMockTouchEvent('touchmove', originY, originX),
+    );
+
+    expect(pip.style.top).toBe('75px');
+    expect(pip.style.left).toBe('225px');
+
+    originX = 950;
+    originY = 125;
+
+    controlBar.ontouchmove!(
+      createMockTouchEvent('touchmove', originY, originX),
+    );
+
+    expect(pip.style.top).toBe('125px');
+    expect(pip.style.left).toBe('950px');
+
+    controlBar.ontouchend!(createMockTouchEvent('touchend', originY, originX));
+
+    await new Promise(process.nextTick);
+
+    expect(pip.style.top).toBe('125px');
+    expect(pip.style.left).toBe('984px');
   });
 });

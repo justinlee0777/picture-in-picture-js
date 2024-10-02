@@ -112,8 +112,8 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
 
   const autoLock = config?.behavior?.autoLock ?? false;
 
-  const moveOverlay = (event: DragEvent) => {
-    const overlayNewY = event.pageY - controlBar.offsetTop;
+  const moveOverlay = (pageX: number, pageY: number) => {
+    const overlayNewY = pageY - controlBar.offsetTop;
 
     const { innerHeight, innerWidth } = window;
     if (innerHeight - overlayNewY > dragLimit) {
@@ -133,7 +133,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
       overlay.style.height = `${finalHeight}px`;
     }
 
-    const overlayNewX = event.pageX - controlBar.offsetLeft;
+    const overlayNewX = pageX - controlBar.offsetLeft;
 
     if (innerWidth - overlayNewX > dragLimit) {
       overlay.style.left = `${overlayNewX}px`;
@@ -160,9 +160,9 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     event.preventDefault();
   };
 
-  const ondrop = (event: DragEvent) => {
+  const ondrop = (pageX: number, pageY: number) => {
     isDragging = false;
-    moveOverlay(event);
+    moveOverlay(pageX, pageY);
 
     if (autoLock) {
       const { x, y } = overlay.getBoundingClientRect();
@@ -211,20 +211,41 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     event.dataTransfer!.dropEffect = 'move';
 
     window.addEventListener('dragover', ondragover);
-    window.addEventListener('drop', ondrop);
+    window.addEventListener('drop', (event) =>
+      ondrop(event.pageX, event.pageY),
+    );
+  };
+
+  // For mobile, b/c the web is totally cohesive (though the touch API is WAAAAY better than the drag API)
+  controlBar.ontouchstart = () => {
+    isDragging = true;
   };
 
   controlBar.ondrag = throttle((event: DragEvent) => {
     if (isDragging) {
-      moveOverlay(event);
+      moveOverlay(event.pageX, event.pageY);
     }
+  }, 1000 / 60);
+
+  // For mobile, b/c the web is totally cohesive
+  controlBar.ontouchmove = throttle((event) => {
+    const [touch] = event.touches;
+    moveOverlay(touch.clientX, touch.clientY);
   }, 1000 / 60);
 
   controlBar.ondragend = () => {
     isDragging = false;
 
     window.removeEventListener('dragover', ondragover);
-    window.removeEventListener('drop', ondrop);
+    window.removeEventListener('drop', (event) =>
+      ondrop(event.pageX, event.pageY),
+    );
+  };
+
+  // For mobile, b/c the web is totally cohesive
+  controlBar.ontouchend = (event) => {
+    const [touch] = event.changedTouches;
+    ondrop(touch.clientX, touch.clientY);
   };
 
   // end of dragging code
