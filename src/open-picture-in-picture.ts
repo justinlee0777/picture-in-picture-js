@@ -80,8 +80,6 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
 
   controlBar.append(closeButton);
 
-  controlBar.style.opacity = '0';
-
   // when the control bar is double-clicked, expand or shrink the overlay by twice its current size.
   // this is a mobile-specific feature.
   controlBar.ondblclick = () => {
@@ -222,7 +220,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     );
   };
 
-  // For mobile, b/c the web is totally cohesive (though the touch API is WAAAAY better than the drag API)
+  // For mobile, b/c the web is great
   controlBar.ontouchstart = () => {
     isDragging = true;
   };
@@ -233,7 +231,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     }
   }, 1000 / 60);
 
-  // For mobile, b/c the web is totally cohesive
+  // For mobile, b/c the web is great
   controlBar.ontouchmove = throttle((event) => {
     const [touch] = event.touches;
     moveOverlay(touch.clientX, touch.clientY);
@@ -248,7 +246,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     );
   };
 
-  // For mobile, b/c the web is totally cohesive
+  // For mobile, b/c the web is great
   controlBar.ontouchend = (event) => {
     const [touch] = event.changedTouches;
     ondrop(touch.clientX, touch.clientY);
@@ -259,16 +257,6 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
   // end of control bar code
 
   overlay.append(controlBar);
-
-  overlay.onmouseenter = () => {
-    controlBar.style.opacity = '1';
-  };
-
-  overlay.onmouseleave = () => {
-    if (!isDragging) {
-      controlBar.style.opacity = '0';
-    }
-  };
 
   overlay.pictureInPicture = {
     close: config.events?.onclose ?? (() => {}),
