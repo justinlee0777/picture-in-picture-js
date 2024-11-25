@@ -1,9 +1,18 @@
 import throttle from 'lodash-es/throttle';
 
+export interface AutoLockConfig {
+  offset?: {
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
+  };
+}
+
 export interface Config {
   behavior?: {
     /** Automatically lock the overlay into one of the four quarters of the screen. */
-    autoLock?: boolean;
+    autoLock?: boolean | AutoLockConfig;
   };
   events?: {
     onclose?: () => void;
@@ -164,18 +173,20 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     event.preventDefault();
   };
 
-  const ondrop = (pageX: number, pageY: number) => {
+  const onmoveend = (pageX: number, pageY: number) => {
     isDragging = false;
     moveOverlay(pageX, pageY);
 
     if (autoLock) {
       const { x, y } = overlay.getBoundingClientRect();
-      const isShrunk = overlay.classList.contains('shrunk');
+      const isShrunk = overlay.classList.contains(shrunkenClass);
 
       const { innerWidth, innerHeight } = window;
 
       const midpointX = innerWidth / 2;
       const midpointY = innerHeight / 2;
+
+      const autoLockConfig = typeof autoLock === 'object' ? autoLock : {};
 
       let left: string;
       let top: string;
@@ -183,17 +194,29 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
       if (isShrunk) {
         left = `${innerWidth - dragLimit}px`;
       } else if (x < midpointX) {
-        left = '1em';
+        left = autoLockConfig.offset?.left
+          ? `${autoLockConfig.offset?.left}px`
+          : '1em';
       } else {
-        left = `calc(${innerWidth}px - ${overlay.clientWidth}px - 1em)`;
+        const offset = autoLockConfig.offset?.right
+          ? `${autoLockConfig.offset?.right}px`
+          : '1em';
+
+        left = `calc(${innerWidth}px - ${overlay.clientWidth}px - ${offset})`;
       }
 
       if (isShrunk) {
         top = `${y}px`;
       } else if (y < midpointY) {
-        top = '1em';
+        top = autoLockConfig.offset?.top
+          ? `${autoLockConfig.offset?.top}px`
+          : '1em';
       } else {
-        top = `calc(${innerHeight}px - ${overlay.clientHeight}px - 1em)`;
+        const offset = autoLockConfig.offset?.bottom
+          ? `${autoLockConfig.offset?.bottom}px`
+          : '1em';
+
+        top = `calc(${innerHeight}px - ${overlay.clientHeight}px - ${offset})`;
       }
 
       overlay
@@ -203,6 +226,10 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
           overlay.style.left = left;
         });
     }
+  };
+
+  const ondrop = (event: DragEvent) => {
+    onmoveend(event.pageX, event.pageY);
   };
 
   controlBar.ondragstart = (event) => {
@@ -215,9 +242,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     event.dataTransfer!.dropEffect = 'move';
 
     window.addEventListener('dragover', ondragover);
-    window.addEventListener('drop', (event) =>
-      ondrop(event.pageX, event.pageY),
-    );
+    window.addEventListener('drop', ondrop);
   };
 
   // For mobile, b/c the web is great
@@ -241,15 +266,13 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
     isDragging = false;
 
     window.removeEventListener('dragover', ondragover);
-    window.removeEventListener('drop', (event) =>
-      ondrop(event.pageX, event.pageY),
-    );
+    window.removeEventListener('drop', ondrop);
   };
 
   // For mobile, b/c the web is great
   controlBar.ontouchend = (event) => {
     const [touch] = event.changedTouches;
-    ondrop(touch.clientX, touch.clientY);
+    onmoveend(touch.clientX, touch.clientY);
   };
 
   // end of dragging code

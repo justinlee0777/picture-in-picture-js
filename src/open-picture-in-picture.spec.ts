@@ -172,8 +172,8 @@ describe('openPictureInPicture()', () => {
 
     window.dispatchEvent(createMockDragEvent('drop', 225, 225));
 
-    expect(pip.style.top).toBe('225px');
-    expect(pip.style.left).toBe('225px');
+    expect(pip.style.top).toBe('100px');
+    expect(pip.style.left).toBe('100px');
   });
 
   test('does not move the PIP past a certain point', async () => {
@@ -461,5 +461,92 @@ describe('openPictureInPicture()', () => {
 
     expect(pip.style.top).toBe('125px');
     expect(pip.style.left).toBe('984px');
+  });
+
+  test('autolocks PIP with certain offsets', async () => {
+    const content = document.createElement('p');
+
+    content.textContent =
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+
+    const pip = openPictureInPicture({
+      behavior: {
+        autoLock: { offset: { top: 25, right: 35, bottom: 45, left: 55 } },
+      },
+    });
+
+    pip.appendChild(content);
+
+    document.body.appendChild(pip);
+
+    // JSDOM does no sizing
+    jest.spyOn(pip, 'clientWidth', 'get').mockReturnValue(150);
+    jest.spyOn(pip, 'clientHeight', 'get').mockReturnValue(300);
+
+    await new Promise(process.nextTick);
+
+    const controlBar = pip.querySelector('.controlBar')!;
+
+    pip.animate = () => ({ finished: Promise.resolve() }) as any;
+
+    let originX = 100,
+      originY = 100;
+
+    jest
+      .spyOn(pip, 'getBoundingClientRect')
+      .mockImplementation(() => ({ x: originX, y: originY }) as any);
+
+    controlBar.dispatchEvent(createMockDragEvent('dragstart', 0, 0));
+
+    window.dispatchEvent(createMockDragEvent('drop', originY, originX));
+
+    await new Promise((resolve) => setTimeout(resolve, 1000 / 6));
+
+    controlBar.dispatchEvent(createMockDragEvent('dragend', 0, 0));
+
+    expect(pip.style.top).toBe('25px');
+    expect(pip.style.left).toBe('55px');
+
+    originX = 1000;
+    originY = 100;
+
+    controlBar.dispatchEvent(createMockDragEvent('dragstart', 0, 0));
+
+    window.dispatchEvent(createMockDragEvent('drop', originY, originX));
+
+    await new Promise((resolve) => setTimeout(resolve, 1000 / 6));
+
+    controlBar.dispatchEvent(createMockDragEvent('dragend', 0, 0));
+
+    expect(pip.style.top).toBe('25px');
+    expect(pip.style.left).toBe('calc(1024px - 150px - 35px)');
+
+    originX = 1000;
+    originY = 700;
+
+    controlBar.dispatchEvent(createMockDragEvent('dragstart', 0, 0));
+
+    window.dispatchEvent(createMockDragEvent('drop', originY, originX));
+
+    await new Promise((resolve) => setTimeout(resolve, 1000 / 6));
+
+    controlBar.dispatchEvent(createMockDragEvent('dragend', 0, 0));
+
+    expect(pip.style.top).toBe('calc(768px - 300px - 45px)');
+    expect(pip.style.left).toBe('calc(1024px - 150px - 35px)');
+
+    originX = 100;
+    originY = 700;
+
+    controlBar.dispatchEvent(createMockDragEvent('dragstart', 0, 0));
+
+    window.dispatchEvent(createMockDragEvent('drop', originY, originX));
+
+    await new Promise((resolve) => setTimeout(resolve, 1000 / 6));
+
+    controlBar.dispatchEvent(createMockDragEvent('dragend', 0, 0));
+
+    expect(pip.style.top).toBe('calc(768px - 300px - 45px)');
+    expect(pip.style.left).toBe('55px');
   });
 });

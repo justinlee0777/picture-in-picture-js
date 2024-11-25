@@ -145,4 +145,90 @@ describe('createTriggerElement', () => {
 
     expect(onpipdestroyed).toHaveBeenCalledTimes(1);
   });
+
+  test('initializes the overlay in a specific position', () => {
+    let triggerElement = createTriggerElement(content, {
+      initialize: {
+        top: 50,
+        left: 45,
+      },
+    });
+
+    let triggerButton = triggerElement.querySelector(
+      '.triggerButton',
+    )! as HTMLElement;
+
+    triggerButton.click();
+
+    let pip = document.body.querySelector('.pipOverlay')! as HTMLElement;
+
+    expect(pip.style.top).toBe('50px');
+    expect(pip.style.left).toBe('45px');
+
+    triggerElement.remove();
+    pip.remove();
+
+    triggerElement = createTriggerElement(content, {
+      initialize: {
+        top: 50,
+        right: 65,
+      },
+    });
+
+    triggerButton = triggerElement.querySelector(
+      '.triggerButton',
+    )! as HTMLElement;
+
+    triggerButton.click();
+
+    pip = document.body.querySelector('.pipOverlay')! as HTMLElement;
+
+    expect(pip.style.top).toBe('50px');
+    expect(pip.style.left).toBe('calc(1024px - 0px - 65px)');
+
+    triggerElement.remove();
+    pip.remove();
+
+    triggerElement = createTriggerElement(content, {
+      initialize: {
+        bottom: 45,
+        right: 65,
+      },
+    });
+
+    triggerButton = triggerElement.querySelector(
+      '.triggerButton',
+    )! as HTMLElement;
+
+    triggerButton.click();
+
+    pip = document.body.querySelector('.pipOverlay')! as HTMLElement;
+
+    expect(pip.style.top).toBe('calc(768px - 0px - 45px)');
+    expect(pip.style.left).toBe('calc(1024px - 0px - 65px)');
+
+    triggerElement.remove();
+    pip.remove();
+
+    triggerElement = createTriggerElement(content, {
+      initialize: {
+        bottom: 75,
+        left: 30,
+      },
+    });
+
+    triggerButton = triggerElement.querySelector(
+      '.triggerButton',
+    )! as HTMLElement;
+
+    triggerButton.click();
+
+    pip = document.body.querySelector('.pipOverlay')! as HTMLElement;
+
+    expect(pip.style.top).toBe('calc(768px - 0px - 75px)');
+    expect(pip.style.left).toBe('30px');
+
+    triggerElement.remove();
+    pip.remove();
+  });
 });

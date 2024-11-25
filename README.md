@@ -45,11 +45,72 @@ createTriggerElement(
 );
 ```
 
+#### openPictureInPicture configuration
+
+`openPictureInPicture` takes the following configuration:
+
+```
+interface Config {
+  behavior?: {
+    /** Automatically lock the overlay into one of the four quarters of the screen. */
+    autoLock?: boolean | {
+      offset?: {
+        top?: number;
+        right?: number;
+        bottom?: number;
+        left?: number;
+      };
+    };
+  };
+  events?: {
+    onclose?: () => void;
+  };
+}
+```
+
+#### createTriggerElement configuration
+
+`createTriggerElement` takes the following configuration:
+
+```
+interface Config {
+    /** Whether the trigger should be replaced with the trigger's content in terms of its place in its parent. */
+    replaceWith?: boolean;
+
+    /** If there is already a PIP on the screen, attach the PIP to this element. This will initialize it with the screen "This is displayed ..." */
+    existingPIP?: HTMLPIPElement;
+
+    /** Overrides logic of the component. */
+    onpipopened?: () => void;
+    /** Overrides logic of the component. */
+    onpipclosed?: () => void;
+
+    /** Does not override component's logic. If 'onpipopened' is configured, this is not called. */
+    onpipcreated?: (pipElement: HTMLPIPElement) => void;
+    /** Does not override component's logic. This is called after the destruction. If 'onpipclosed' is configured, this is not called. */
+    onpipdestroyed?: (pipElement: HTMLPIPElement) => void;
+    behavior?: {
+    /** Automatically lock the overlay into one of the four quarters of the screen. */
+        autoLock?: boolean;
+    };
+  initialize?: {
+    /** This property is preferred over property 'bottom'.*/
+    top?: number;
+    /** This property is preferred less than property 'left'. If 'left' is defined, this will not be used. */
+    right?: number;
+    /** This property is preferred less than property 'top'. If 'top' is defined, this will not be used. */
+    bottom?: number;
+    /** This property is preferred over property 'right'. */
+    left?: number;
+  };
+}
+```
+
 ### Caveats
 
 `picture-in-picture-js` is a pale imitation of two existing Picture-in-Picture APIs:
 
-1. [The <video> Picture in Picture](https://developer.mozilla.org/en-US/docs/Web/API/Picture-in-Picture_API)
+1. [The video Picture in Picture](https://developer.mozilla.org/en-US/docs/Web/API/Picture-in-Picture_API)
 2. [The generic Picture in Picture](https://developer.mozilla.org/en-US/docs/Web/API/Document_Picture-in-Picture_API)
 
 The first API has good support across modern browsers but only works for `<video>` elements.

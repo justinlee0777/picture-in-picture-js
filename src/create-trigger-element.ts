@@ -20,6 +20,17 @@ type Config = {
   onpipcreated?: (pipElement: HTMLPIPElement) => void;
   /** Does not override component's logic. This is called after the destruction. If 'onpipclosed' is configured, this is not called. */
   onpipdestroyed?: (pipElement: HTMLPIPElement) => void;
+
+  initialize?: {
+    /** This property is preferred over property 'bottom'.*/
+    top?: number;
+    /** This property is preferred less than property 'left'. If 'left' is defined, this will not be used. */
+    right?: number;
+    /** This property is preferred less than property 'top'. If 'top' is defined, this will not be used. */
+    bottom?: number;
+    /** This property is preferred over property 'right'. */
+    left?: number;
+  };
 } & PictureInPictureConfig['behavior'];
 
 interface CreateScreenConfig {
@@ -50,6 +61,7 @@ export default function createTriggerElement(
     existingPIP,
     onpipcreated,
     onpipdestroyed,
+    initialize,
   }: Config = {},
 ): HTMLElement {
   const container = document.createElement('div');
@@ -136,6 +148,20 @@ export default function createTriggerElement(
         autoLock,
       },
     });
+
+    if (initialize) {
+      if (initialize.top) {
+        pip.style.top = `${initialize.top}px`;
+      } else if (initialize.bottom) {
+        pip.style.top = `calc(${window.innerHeight}px - ${pip.clientHeight}px - ${initialize.bottom}px)`;
+      }
+
+      if (initialize.left) {
+        pip.style.left = `${initialize.left}px`;
+      } else if (initialize.right) {
+        pip.style.left = `calc(${window.innerWidth}px - ${pip.clientWidth}px - ${initialize.right}px)`;
+      }
+    }
 
     pip.appendChild(content);
 
