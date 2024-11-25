@@ -229,7 +229,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
   };
 
   const ondrop = (event: DragEvent) => {
-    onmoveend(event.pageX, event.pageY);
+    onmoveend(event.clientX, event.clientY);
   };
 
   controlBar.ondragstart = (event) => {
@@ -252,7 +252,7 @@ function createPictureInPicture(config: Config = {}): HTMLPIPElement {
 
   controlBar.ondrag = throttle((event: DragEvent) => {
     if (isDragging) {
-      moveOverlay(event.pageX, event.pageY);
+      moveOverlay(event.clientX, event.clientY);
     }
   }, 1000 / 60);
 

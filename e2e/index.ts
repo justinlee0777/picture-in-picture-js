@@ -34,6 +34,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   document.body.appendChild(trigger2);
 
+  const content3 = document.createElement('img');
+
+  content3.src =
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Pieter_Bruegel_the_Elder_-_The_Tower_of_Babel_%28Vienna%29_-_Google_Art_Project.jpg/640px-Pieter_Bruegel_the_Elder_-_The_Tower_of_Babel_%28Vienna%29_-_Google_Art_Project.jpg';
+  content3.style.height = '75vh';
+  content3.style.width = '75vw';
+  content3.style.objectFit = 'contain';
+
+  const trigger3 = createTriggerElement(content3, { autoLock: true });
+
+  document.body.appendChild(trigger3);
+
   document.body.style.display = 'flex';
   document.body.style.flexDirection = 'column';
   document.body.style.alignItems = 'center';
